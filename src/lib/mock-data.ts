@@ -41,6 +41,97 @@ export const MOCK_LEADS: Lead[] = [
   { id: "12", firstName: "Hannah", lastName: "Kim", email: "hannah.k@email.com", phone: "(555) 333-4444", source: "Website", status: "enrolled", program: "Instrument Rating (IR)", assignedTo: "Mike R.", createdAt: "2026-03-01", lastContact: "2026-03-28", notes: "Already flying, needs IR", value: 8500 },
 ];
 
+export interface Activity {
+  id: string;
+  leadId: string;
+  type: "email" | "call" | "note" | "status_change" | "sms" | "tour";
+  description: string;
+  date: string;
+  user: string;
+}
+
+export const MOCK_ACTIVITIES: Activity[] = [
+  { id: "a1", leadId: "1", type: "note", description: "Lead submitted inquiry form on website", date: "2026-04-08 09:15", user: "System" },
+  { id: "a2", leadId: "1", type: "email", description: "Sent welcome email with program brochure", date: "2026-04-08 10:30", user: "Sarah K." },
+  { id: "a3", leadId: "2", type: "call", description: "Initial outreach call — left voicemail", date: "2026-04-06 14:00", user: "Mike R." },
+  { id: "a4", leadId: "2", type: "call", description: "Connected! Discussed IR program details and schedule", date: "2026-04-09 11:00", user: "Mike R." },
+  { id: "a5", leadId: "3", type: "note", description: "Referred by current student Alex Turner", date: "2026-04-01 08:00", user: "System" },
+  { id: "a6", leadId: "3", type: "status_change", description: "Moved to Discovery Call stage", date: "2026-04-03 09:00", user: "Sarah K." },
+  { id: "a7", leadId: "3", type: "call", description: "Discovery call completed. Very interested in CPL program.", date: "2026-04-07 15:30", user: "Sarah K." },
+  { id: "a8", leadId: "4", type: "sms", description: "Sent tour confirmation text for April 12", date: "2026-04-06 16:00", user: "Tom B." },
+  { id: "a9", leadId: "5", type: "tour", description: "Campus tour completed. Showed Cessna 172 fleet.", date: "2026-04-04 10:00", user: "Mike R." },
+  { id: "a10", leadId: "6", type: "status_change", description: "Enrolled! Starting April 15th", date: "2026-04-01 12:00", user: "Sarah K." },
+  { id: "a11", leadId: "7", type: "note", description: "Career changer from software engineering. Has simulator experience.", date: "2026-04-09 08:30", user: "Tom B." },
+  { id: "a12", leadId: "8", type: "email", description: "Sent financing options and payment plan details", date: "2026-04-08 13:00", user: "Sarah K." },
+];
+
+export interface Sequence {
+  id: string;
+  name: string;
+  trigger: string;
+  steps: SequenceStep[];
+  active: boolean;
+  enrolled: number;
+  completed: number;
+}
+
+export interface SequenceStep {
+  id: string;
+  type: "email" | "sms" | "wait" | "task";
+  delay: string;
+  subject?: string;
+  content?: string;
+}
+
+export const MOCK_SEQUENCES: Sequence[] = [
+  {
+    id: "s1", name: "New Lead Welcome", trigger: "Lead enters 'New' stage", active: true, enrolled: 45, completed: 32,
+    steps: [
+      { id: "st1", type: "email", delay: "Immediately", subject: "Welcome to SkyLead Aviation!", content: "Hi {{first_name}}, thanks for your interest in flight training..." },
+      { id: "st2", type: "wait", delay: "2 days" },
+      { id: "st3", type: "sms", delay: "After wait", content: "Hi {{first_name}}! Did you get a chance to review our program info? Reply YES to schedule a call." },
+      { id: "st4", type: "wait", delay: "3 days" },
+      { id: "st5", type: "email", delay: "After wait", subject: "Your Flight Training Journey Starts Here", content: "Hi {{first_name}}, we'd love to help you take the first step..." },
+      { id: "st6", type: "task", delay: "After wait", content: "Follow up call if no response" },
+    ],
+  },
+  {
+    id: "s2", name: "Post-Tour Follow Up", trigger: "Lead enters 'Tour Completed' stage", active: true, enrolled: 18, completed: 14,
+    steps: [
+      { id: "st7", type: "email", delay: "1 hour", subject: "Great meeting you today!", content: "Hi {{first_name}}, it was great showing you around today..." },
+      { id: "st8", type: "wait", delay: "1 day" },
+      { id: "st9", type: "sms", delay: "After wait", content: "Hi {{first_name}}! Any questions about what you saw on the tour? We're here to help!" },
+      { id: "st10", type: "wait", delay: "5 days" },
+      { id: "st11", type: "email", delay: "After wait", subject: "Ready to start flying?", content: "Hi {{first_name}}, just checking in..." },
+    ],
+  },
+  {
+    id: "s3", name: "Lost Lead Re-engagement", trigger: "Lead enters 'Lost' stage", active: false, enrolled: 12, completed: 5,
+    steps: [
+      { id: "st12", type: "wait", delay: "30 days" },
+      { id: "st13", type: "email", delay: "After wait", subject: "Still dreaming of flying?", content: "Hi {{first_name}}, we noticed you explored flight training with us..." },
+    ],
+  },
+];
+
+export interface IntakeForm {
+  id: string;
+  name: string;
+  fields: string[];
+  submissions: number;
+  conversionRate: number;
+  active: boolean;
+  embedCode: string;
+  program: string;
+}
+
+export const MOCK_FORMS: IntakeForm[] = [
+  { id: "f1", name: "General Inquiry Form", fields: ["First Name", "Last Name", "Email", "Phone", "Program Interest", "Experience Level"], submissions: 234, conversionRate: 28, active: true, embedCode: '<script src="https://skylead.app/forms/f1.js"></script>', program: "All Programs" },
+  { id: "f2", name: "Discovery Flight Booking", fields: ["First Name", "Last Name", "Email", "Phone", "Preferred Date", "Questions"], submissions: 89, conversionRate: 65, active: true, embedCode: '<script src="https://skylead.app/forms/f2.js"></script>', program: "Discovery Flight" },
+  { id: "f3", name: "PPL Enrollment Application", fields: ["First Name", "Last Name", "Email", "Phone", "Date of Birth", "Medical Certificate", "Flight Hours", "Availability", "Financing"], submissions: 42, conversionRate: 45, active: true, embedCode: '<script src="https://skylead.app/forms/f3.js"></script>', program: "Private Pilot (PPL)" },
+  { id: "f4", name: "Career Pilot Program", fields: ["First Name", "Last Name", "Email", "Phone", "Education", "Career Goals", "Timeline", "Budget"], submissions: 15, conversionRate: 33, active: false, embedCode: '<script src="https://skylead.app/forms/f4.js"></script>', program: "ATP / Career" },
+];
+
 export const STATS = {
   totalLeads: 147,
   newThisWeek: 12,
