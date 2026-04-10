@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Kanban, UserPlus, Settings, Plane, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, UserPlus, Settings, Plane, Zap, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,8 @@ const mainNav = [
   { title: "Leads", url: "/leads", icon: UserPlus },
   { title: "Pipeline", url: "/pipeline", icon: Kanban },
   { title: "Contacts", url: "/contacts", icon: Users },
+  { title: "Sequences", url: "/sequences", icon: Zap },
+  { title: "Forms", url: "/forms", icon: FileText },
 ];
 
 const bottomNav = [
