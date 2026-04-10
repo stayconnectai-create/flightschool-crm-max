@@ -2,13 +2,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MOCK_LEADS, Lead, LeadStatus } from "@/lib/mock-data";
 import { LeadStatusBadge } from "@/components/LeadStatusBadge";
-import { Search, Filter, Plus, Mail, Phone } from "lucide-react";
+import { LeadDetailDrawer } from "@/components/LeadDetailDrawer";
+import { Search, Plus, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Leads() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const filtered = MOCK_LEADS.filter(l => {
     const matchesSearch = `${l.firstName} ${l.lastName} ${l.email} ${l.program}`.toLowerCase().includes(search.toLowerCase());
@@ -72,18 +74,22 @@ export default function Leads() {
             </thead>
             <tbody>
               {filtered.map(lead => (
-                <tr key={lead.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer">
+                <tr
+                  key={lead.id}
+                  onClick={() => setSelectedLead(lead)}
+                  className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                >
                   <td className="px-5 py-3">
                     <div className="font-medium">{lead.firstName} {lead.lastName}</div>
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <a href={`mailto:${lead.email}`} className="text-muted-foreground hover:text-primary">
+                      <button onClick={e => { e.stopPropagation(); window.location.href = `mailto:${lead.email}`; }} className="text-muted-foreground hover:text-primary">
                         <Mail className="h-3.5 w-3.5" />
-                      </a>
-                      <a href={`tel:${lead.phone}`} className="text-muted-foreground hover:text-primary">
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); window.location.href = `tel:${lead.phone}`; }} className="text-muted-foreground hover:text-primary">
                         <Phone className="h-3.5 w-3.5" />
-                      </a>
+                      </button>
                     </div>
                   </td>
                   <td className="px-5 py-3 text-muted-foreground">{lead.program}</td>
@@ -98,6 +104,8 @@ export default function Leads() {
           </table>
         </div>
       </motion.div>
+
+      <LeadDetailDrawer lead={selectedLead} open={!!selectedLead} onClose={() => setSelectedLead(null)} />
     </div>
   );
 }
