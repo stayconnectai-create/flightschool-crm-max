@@ -132,6 +132,42 @@ export const MOCK_FORMS: IntakeForm[] = [
   { id: "f4", name: "Career Pilot Program", fields: ["First Name", "Last Name", "Email", "Phone", "Education", "Career Goals", "Timeline", "Budget"], submissions: 15, conversionRate: 33, active: false, embedCode: '<script src="https://skylead.app/forms/f4.js"></script>', program: "ATP / Career" },
 ];
 
+export type AircraftStatus = "in_flight" | "grounded" | "maintenance" | "reserved";
+
+export interface Aircraft {
+  id: string;
+  tailNumber: string; // e.g. N12345
+  model: string; // e.g. Cessna 172 Skyhawk
+  year: number;
+  type: "Single Engine" | "Multi Engine" | "Helicopter" | "Jet";
+  status: AircraftStatus;
+  hobbsHours: number;
+  nextMaintenanceHours: number;
+  basedAt: string; // ICAO
+  hourlyRate: number;
+  pilot?: string;
+  // Live telemetry (mock)
+  lat: number;
+  lng: number;
+  altitude: number; // feet
+  speed: number; // knots
+  heading: number; // degrees
+  origin?: string; // ICAO
+  destination?: string; // ICAO
+  squawk?: string;
+}
+
+export const MOCK_AIRCRAFT: Aircraft[] = [
+  { id: "ac1", tailNumber: "N172SK", model: "Cessna 172 Skyhawk", year: 2019, type: "Single Engine", status: "in_flight", hobbsHours: 2840, nextMaintenanceHours: 2900, basedAt: "KPAO", hourlyRate: 165, pilot: "Sarah K. / J. Mitchell", lat: 37.45, lng: -122.12, altitude: 3500, speed: 110, heading: 270, origin: "KPAO", destination: "KHAF", squawk: "1200" },
+  { id: "ac2", tailNumber: "N182SL", model: "Cessna 182 Skylane", year: 2020, type: "Single Engine", status: "in_flight", hobbsHours: 1920, nextMaintenanceHours: 2000, basedAt: "KPAO", hourlyRate: 215, pilot: "Mike R. / E. Chen", lat: 37.62, lng: -122.38, altitude: 5500, speed: 135, heading: 90, origin: "KSQL", destination: "KPAO", squawk: "4521" },
+  { id: "ac3", tailNumber: "N455PA", model: "Piper Archer PA-28", year: 2018, type: "Single Engine", status: "in_flight", hobbsHours: 3210, nextMaintenanceHours: 3300, basedAt: "KSQL", hourlyRate: 175, pilot: "Tom B. / A. Patel", lat: 37.71, lng: -122.22, altitude: 2500, speed: 95, heading: 180, origin: "KSQL", destination: "KRHV", squawk: "1200" },
+  { id: "ac4", tailNumber: "N700DA", model: "Diamond DA40", year: 2021, type: "Single Engine", status: "in_flight", hobbsHours: 1100, nextMaintenanceHours: 1200, basedAt: "KPAO", hourlyRate: 225, pilot: "Sarah K. / C. Rivera", lat: 37.36, lng: -121.93, altitude: 4500, speed: 130, heading: 45, origin: "KRHV", destination: "KPAO", squawk: "3344" },
+  { id: "ac5", tailNumber: "N240SE", model: "Beechcraft Baron 58", year: 2017, type: "Multi Engine", status: "grounded", hobbsHours: 4520, nextMaintenanceHours: 4600, basedAt: "KPAO", hourlyRate: 425, lat: 37.4611, lng: -122.115, altitude: 0, speed: 0, heading: 0 },
+  { id: "ac6", tailNumber: "N99TX", model: "Cirrus SR22", year: 2022, type: "Single Engine", status: "reserved", hobbsHours: 680, nextMaintenanceHours: 800, basedAt: "KPAO", hourlyRate: 295, lat: 37.4611, lng: -122.115, altitude: 0, speed: 0, heading: 0 },
+  { id: "ac7", tailNumber: "N311MX", model: "Piper Seminole PA-44", year: 2016, type: "Multi Engine", status: "maintenance", hobbsHours: 5210, nextMaintenanceHours: 5210, basedAt: "KPAO", hourlyRate: 385, lat: 37.4611, lng: -122.115, altitude: 0, speed: 0, heading: 0 },
+  { id: "ac8", tailNumber: "N88RH", model: "Robinson R44", year: 2020, type: "Helicopter", status: "in_flight", hobbsHours: 1450, nextMaintenanceHours: 1500, basedAt: "KSQL", hourlyRate: 495, pilot: "Alex T.", lat: 37.55, lng: -122.30, altitude: 1500, speed: 75, heading: 315, origin: "KSQL", destination: "KOAK", squawk: "1200" },
+];
+
 export const STATS = {
   totalLeads: 147,
   newThisWeek: 12,
