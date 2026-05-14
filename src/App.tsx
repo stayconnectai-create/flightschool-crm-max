@@ -10,6 +10,7 @@ import Pipeline from "./pages/Pipeline";
 import Contacts from "./pages/Contacts";
 import Sequences from "./pages/Sequences";
 import IntakeForms from "./pages/IntakeForms";
+import Fleet from "./pages/Fleet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/sequences" element={<Sequences />} />
             <Route path="/forms" element={<IntakeForms />} />
+            <Route path="/fleet" element={<Fleet />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
