@@ -96,11 +96,19 @@ export default function Fleet() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold">Fleet & Live Tracking</h1>
-          <p className="text-sm text-muted-foreground">Manage aircraft and track real-time positions across your fleet.</p>
+          <p className="text-sm text-muted-foreground">
+            Real-time positions via OpenSky Network ADS-B
+            {lastSync && <span className="ml-2 text-xs">· last sync {lastSync.toLocaleTimeString()}</span>}
+          </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" /> Add Aircraft
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={fetchLive} disabled={syncing}>
+            <RefreshCw className={cn("h-4 w-4", syncing && "animate-spin")} /> Sync
+          </Button>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" /> Add Aircraft
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
