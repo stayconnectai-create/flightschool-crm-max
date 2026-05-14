@@ -22,6 +22,7 @@ const mainNav = [
   { title: "Contacts", url: "/contacts", icon: Users },
   { title: "Sequences", url: "/sequences", icon: Zap },
   { title: "Forms", url: "/forms", icon: FileText },
+  { title: "Fleet & Tracking", url: "/fleet", icon: Radio },
 ];
 
 const bottomNav = [
