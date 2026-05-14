@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Plane, Radio, Wrench, Calendar, Plus, Gauge, MapPin } from "lucide-react";
+import { Plane, Radio, Wrench, Calendar, Plus, Gauge, MapPin, RefreshCw } from "lucide-react";
 import { FleetMap } from "@/components/FleetMap";
 import { StatCard } from "@/components/StatCard";
 import { MOCK_AIRCRAFT, Aircraft, AircraftStatus } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const statusMeta: Record<AircraftStatus, { label: string; className: string; dot: string }> = {
   in_flight: { label: "In Flight", className: "bg-success/15 text-success border-success/30", dot: "bg-success animate-pulse" },
@@ -15,28 +17,67 @@ const statusMeta: Record<AircraftStatus, { label: string; className: string; dot
   maintenance: { label: "Maintenance", className: "bg-warning/15 text-warning border-warning/30", dot: "bg-warning" },
 };
 
+interface OpenSkyState {
+  icao24: string;
+  callsign: string | null;
+  lat: number;
+  lng: number;
+  altitude: number | null;
+  speed: number | null;
+  heading: number;
+  onGround: boolean;
+  squawk: string | null;
+}
+
 export default function Fleet() {
   const [aircraft, setAircraft] = useState<Aircraft[]>(MOCK_AIRCRAFT);
   const [selectedId, setSelectedId] = useState<string | null>(MOCK_AIRCRAFT[0]?.id ?? null);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
-  // Live tracking simulation: nudge in-flight aircraft along their heading every 3s
-  useEffect(() => {
-    const id = setInterval(() => {
+  const fetchLive = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("opensky-track", {
+        body: { icao24: MOCK_AIRCRAFT.map((a) => a.icao24) },
+      });
+      if (error) throw error;
+      const states: OpenSkyState[] = data?.states ?? [];
       setAircraft((prev) =>
         prev.map((a) => {
-          if (a.status !== "in_flight") return a;
-          const rad = (a.heading * Math.PI) / 180;
-          // ~speed knots → degrees per tick (rough/visual only)
-          const step = (a.speed / 3600) * 0.05;
+          const live = states.find((s) => s.icao24.toLowerCase() === a.icao24.toLowerCase());
+          if (!live) return a;
           return {
             ...a,
-            lat: a.lat + Math.cos(rad) * step,
-            lng: a.lng + Math.sin(rad) * step,
+            status: live.onGround ? a.status : "in_flight",
+            lat: live.lat,
+            lng: live.lng,
+            altitude: live.altitude ?? a.altitude,
+            speed: live.speed ?? a.speed,
+            heading: live.heading,
+            squawk: live.squawk ?? a.squawk,
           };
         }),
       );
-    }, 3000);
+      setLastSync(new Date());
+      if (states.length === 0) {
+        toast.info("No live ADS-B contacts for this fleet right now (demo aircraft may not be airborne).");
+      } else {
+        toast.success(`Live update: ${states.length} aircraft tracked via OpenSky`);
+      }
+    } catch (e) {
+      toast.error("Could not reach OpenSky. Showing last known positions.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Initial fetch + auto-refresh every 30s
+  useEffect(() => {
+    fetchLive();
+    const id = setInterval(fetchLive, 30_000);
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const counts = useMemo(() => {
@@ -55,11 +96,19 @@ export default function Fleet() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold">Fleet & Live Tracking</h1>
-          <p className="text-sm text-muted-foreground">Manage aircraft and track real-time positions across your fleet.</p>
+          <p className="text-sm text-muted-foreground">
+            Real-time positions via OpenSky Network ADS-B
+            {lastSync && <span className="ml-2 text-xs">· last sync {lastSync.toLocaleTimeString()}</span>}
+          </p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" /> Add Aircraft
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={fetchLive} disabled={syncing}>
+            <RefreshCw className={cn("h-4 w-4", syncing && "animate-spin")} /> Sync
+          </Button>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" /> Add Aircraft
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
