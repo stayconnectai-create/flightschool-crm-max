@@ -29,6 +29,7 @@ const App = () => (
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/sequences" element={<Sequences />} />
             <Route path="/forms" element={<IntakeForms />} />
+            <Route path="/fleet" element={<Fleet />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
