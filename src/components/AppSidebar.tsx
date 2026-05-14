@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Kanban, UserPlus, Settings, Plane, Zap, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, UserPlus, Settings, Plane, Zap, FileText, Radio } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
