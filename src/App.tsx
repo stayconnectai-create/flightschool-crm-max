@@ -10,6 +10,7 @@ import Pipeline from "./pages/Pipeline";
 import Contacts from "./pages/Contacts";
 import Sequences from "./pages/Sequences";
 import IntakeForms from "./pages/IntakeForms";
+import Fleet from "./pages/Fleet";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
