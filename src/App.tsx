@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
 import Pipeline from "./pages/Pipeline";
@@ -11,6 +13,7 @@ import Contacts from "./pages/Contacts";
 import Sequences from "./pages/Sequences";
 import IntakeForms from "./pages/IntakeForms";
 import Fleet from "./pages/Fleet";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,18 +24,35 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
+        <AuthProvider>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/leads" element={<Leads />} />
-            <Route path="/pipeline" element={<Pipeline />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/sequences" element={<Sequences />} />
-            <Route path="/forms" element={<IntakeForms />} />
-            <Route path="/fleet" element={<Fleet />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="*"
+              element={
+                <AppLayout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/leads" element={<Leads />} />
+                    <Route path="/pipeline" element={<Pipeline />} />
+                    <Route path="/contacts" element={<Contacts />} />
+                    <Route path="/sequences" element={<Sequences />} />
+                    <Route path="/forms" element={<IntakeForms />} />
+                    <Route
+                      path="/fleet"
+                      element={
+                        <ProtectedRoute>
+                          <Fleet />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </AppLayout>
+              }
+            />
           </Routes>
-        </AppLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
