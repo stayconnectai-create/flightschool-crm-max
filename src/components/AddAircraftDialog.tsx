@@ -51,8 +51,15 @@ export function AddAircraftDialog({ onCreated }: { onCreated: () => void }) {
     }
     setBusy(true);
     const { error } = await supabase.from("aircraft").insert({
-      ...parsed.data,
+      tail_number: parsed.data.tail_number,
       icao24: parsed.data.icao24.toLowerCase(),
+      model: parsed.data.model,
+      type: parsed.data.type,
+      year: parsed.data.year,
+      hourly_rate: parsed.data.hourly_rate,
+      hobbs_hours: parsed.data.hobbs_hours,
+      next_maintenance_hours: parsed.data.next_maintenance_hours,
+      based_at: parsed.data.based_at,
       user_id: user.id,
     });
     setBusy(false);
