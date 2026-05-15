@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      aircraft: {
+        Row: {
+          altitude: number | null
+          based_at: string | null
+          created_at: string
+          destination: string | null
+          heading: number | null
+          hobbs_hours: number
+          hourly_rate: number
+          icao24: string
+          id: string
+          lat: number | null
+          lng: number | null
+          model: string
+          next_maintenance_hours: number
+          origin: string | null
+          pilot: string | null
+          speed: number | null
+          squawk: string | null
+          status: Database["public"]["Enums"]["aircraft_status"]
+          tail_number: string
+          type: string | null
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          altitude?: number | null
+          based_at?: string | null
+          created_at?: string
+          destination?: string | null
+          heading?: number | null
+          hobbs_hours?: number
+          hourly_rate?: number
+          icao24: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          model: string
+          next_maintenance_hours?: number
+          origin?: string | null
+          pilot?: string | null
+          speed?: number | null
+          squawk?: string | null
+          status?: Database["public"]["Enums"]["aircraft_status"]
+          tail_number: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          altitude?: number | null
+          based_at?: string | null
+          created_at?: string
+          destination?: string | null
+          heading?: number | null
+          hobbs_hours?: number
+          hourly_rate?: number
+          icao24?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          model?: string
+          next_maintenance_hours?: number
+          origin?: string | null
+          pilot?: string | null
+          speed?: number | null
+          squawk?: string | null
+          status?: Database["public"]["Enums"]["aircraft_status"]
+          tail_number?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +100,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      aircraft_status: "in_flight" | "grounded" | "reserved" | "maintenance"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +227,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      aircraft_status: ["in_flight", "grounded", "reserved", "maintenance"],
+    },
   },
 } as const
