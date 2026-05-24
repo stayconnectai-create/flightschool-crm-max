@@ -69,39 +69,33 @@ export default function Fleet() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Uses adsb.fi — free, no API key, CORS-friendly
+  // Edge function proxies to adsb.fi — avoids CSP and IP restrictions
   const fetchLive = useCallback(async () => {
     if (aircraft.length === 0) return;
     setSyncing(true);
     try {
-      const codes = aircraft.map((a) => a.icao24.toLowerCase()).join(",");
-      const resp = await fetch(`https://opendata.adsb.fi/api/v2/icao/${codes}`);
+      const { data, error } = await supabase.functions.invoke("opensky-track", {
+        body: { icao24: aircraft.map((a) => a.icao24) },
+      });
 
-      if (!resp.ok) throw new Error(`adsb.fi returned ${resp.status}`);
+      if (error) throw new Error(error.message);
 
-      const data = await resp.json();
-      const contacts: any[] = data.ac ?? [];
+      const contacts: any[] = data?.contacts ?? [];
 
       setAircraft((prev) =>
         prev.map((a) => {
           const live = contacts.find(
-            (c: any) => c.hex?.toLowerCase() === a.icao24.toLowerCase()
+            (c: any) => c.icao24 === a.icao24.toLowerCase()
           );
-          if (!live || live.lat == null || live.lon == null) return a;
-
-          const onGround = live.alt_baro === "ground" || live.gs < 30;
-          const altFt = typeof live.alt_baro === "number" ? Math.round(live.alt_baro) : a.altitude;
-          const speedKts = live.gs != null ? Math.round(live.gs) : a.speed;
-          const heading = live.track != null ? Math.round(live.track) : a.heading;
-
+          if (!live) return a;
           return {
             ...a,
-            status: onGround ? a.status : "in_flight" as AircraftStatus,
+            status: live.onGround ? a.status : "in_flight" as AircraftStatus,
             lat: live.lat,
-            lng: live.lon,
-            altitude: altFt,
-            speed: speedKts,
-            heading,
+            lng: live.lng,
+            altitude: live.altitude ?? a.altitude,
+            speed: live.speed ?? a.speed,
+            heading: live.heading ?? a.heading,
             squawk: live.squawk ?? a.squawk,
           };
         })
@@ -109,12 +103,12 @@ export default function Fleet() {
 
       setLastSync(new Date());
       if (contacts.length === 0) {
-        toast.info("No live ADS-B contacts right now — aircraft may be on ground.");
+        toast.info("No live ADS-B contacts — aircraft may be on the ground.");
       } else {
-        toast.success(`Live update: ${contacts.length} aircraft tracked`);
+        toast.success(`Live: ${contacts.length} aircraft tracked`);
       }
-    } catch (err) {
-      toast.error("Could not reach ADS-B data. Try again shortly.");
+    } catch (err: any) {
+      toast.error(`Tracking error: ${err.message ?? "unknown"}`);
       console.error(err);
     } finally {
       setSyncing(false);
