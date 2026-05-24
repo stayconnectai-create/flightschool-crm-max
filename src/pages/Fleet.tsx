@@ -72,23 +72,43 @@ export default function Fleet() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Calls OpenSky directly from the browser — no edge function needed
   const fetchLive = useCallback(async () => {
     if (aircraft.length === 0) return;
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("opensky-track", {
-        body: { icao24: aircraft.map((a) => a.icao24) },
-      });
-      if (error) throw error;
-      const states: OpenSkyState[] = data?.states ?? [];
+      const codes = aircraft.map((a) => a.icao24.toLowerCase());
+      const params = new URLSearchParams();
+      codes.forEach((c) => params.append("icao24", c));
+
+      const resp = await fetch(
+        `https://opensky-network.org/api/states/all?${params.toString()}`
+      );
+
+      if (!resp.ok) throw new Error(`OpenSky returned ${resp.status}`);
+
+      const data = await resp.json();
+      const states: OpenSkyState[] = (data.states ?? []).map((s: any) => ({
+        icao24: s[0],
+        callsign: s[1]?.trim() || null,
+        lng: s[5],
+        lat: s[6],
+        altitude: s[7] != null ? Math.round(s[7] * 3.28084) : null, // m → ft
+        onGround: s[8],
+        speed: s[9] != null ? Math.round(s[9] * 1.94384) : null,    // m/s → kts
+        heading: s[10] != null ? Math.round(s[10]) : 0,
+        squawk: s[14],
+      })).filter((s: any) => s.lat != null && s.lng != null);
+
       setAircraft((prev) =>
         prev.map((a) => {
           const live = states.find((s) => s.icao24.toLowerCase() === a.icao24.toLowerCase());
           if (!live) return a;
           return {
             ...a,
-            status: live.onGround ? a.status : "in_flight",
-            lat: live.lat, lng: live.lng,
+            status: live.onGround ? a.status : "in_flight" as AircraftStatus,
+            lat: live.lat,
+            lng: live.lng,
             altitude: live.altitude ?? a.altitude,
             speed: live.speed ?? a.speed,
             heading: live.heading,
@@ -99,8 +119,8 @@ export default function Fleet() {
       setLastSync(new Date());
       if (states.length === 0) toast.info("No live ADS-B contacts right now.");
       else toast.success(`Live update: ${states.length} aircraft tracked`);
-    } catch {
-      toast.error("Could not reach OpenSky.");
+    } catch (err) {
+      toast.error("Could not reach OpenSky. Try again shortly.");
     } finally {
       setSyncing(false);
     }
@@ -260,3 +280,4 @@ function DetailItem({ icon: Icon, label, value }: { icon?: any; label: string; v
     </div>
   );
 }
+
