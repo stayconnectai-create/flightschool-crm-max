@@ -19,12 +19,6 @@ const statusMeta: Record<AircraftStatus, { label: string; className: string; dot
   maintenance: { label: "Maintenance", className: "bg-warning/15 text-warning border-warning/30", dot: "bg-warning" },
 };
 
-interface OpenSkyState {
-  icao24: string; callsign: string | null; lat: number; lng: number;
-  altitude: number | null; speed: number | null; heading: number;
-  onGround: boolean; squawk: string | null;
-}
-
 function rowToAircraft(r: any): Aircraft {
   return {
     id: r.id,
@@ -39,8 +33,8 @@ function rowToAircraft(r: any): Aircraft {
     basedAt: r.based_at ?? "",
     hourlyRate: Number(r.hourly_rate),
     pilot: r.pilot ?? undefined,
-    lat: r.lat ?? 37.4611,
-    lng: r.lng ?? -122.115,
+    lat: r.lat ?? 40.0,
+    lng: r.lng ?? -3.7,
     altitude: r.altitude ?? 0,
     speed: r.speed ?? 0,
     heading: r.heading ?? 0,
@@ -59,7 +53,10 @@ export default function Fleet() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const { data, error } = await supabase.from("aircraft").select("*").order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("aircraft")
+      .select("*")
+      .order("created_at", { ascending: true });
     if (error) {
       toast.error(error.message);
     } else {
@@ -72,55 +69,53 @@ export default function Fleet() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Calls OpenSky directly from the browser — no edge function needed
+  // Uses adsb.fi — free, no API key, CORS-friendly
   const fetchLive = useCallback(async () => {
     if (aircraft.length === 0) return;
     setSyncing(true);
     try {
-      const codes = aircraft.map((a) => a.icao24.toLowerCase());
-      const params = new URLSearchParams();
-      codes.forEach((c) => params.append("icao24", c));
+      const codes = aircraft.map((a) => a.icao24.toLowerCase()).join(",");
+      const resp = await fetch(`https://opendata.adsb.fi/api/v2/icao/${codes}`);
 
-      const resp = await fetch(
-        `https://opensky-network.org/api/states/all?${params.toString()}`
-      );
-
-      if (!resp.ok) throw new Error(`OpenSky returned ${resp.status}`);
+      if (!resp.ok) throw new Error(`adsb.fi returned ${resp.status}`);
 
       const data = await resp.json();
-      const states: OpenSkyState[] = (data.states ?? []).map((s: any) => ({
-        icao24: s[0],
-        callsign: s[1]?.trim() || null,
-        lng: s[5],
-        lat: s[6],
-        altitude: s[7] != null ? Math.round(s[7] * 3.28084) : null, // m → ft
-        onGround: s[8],
-        speed: s[9] != null ? Math.round(s[9] * 1.94384) : null,    // m/s → kts
-        heading: s[10] != null ? Math.round(s[10]) : 0,
-        squawk: s[14],
-      })).filter((s: any) => s.lat != null && s.lng != null);
+      const contacts: any[] = data.ac ?? [];
 
       setAircraft((prev) =>
         prev.map((a) => {
-          const live = states.find((s) => s.icao24.toLowerCase() === a.icao24.toLowerCase());
-          if (!live) return a;
+          const live = contacts.find(
+            (c: any) => c.hex?.toLowerCase() === a.icao24.toLowerCase()
+          );
+          if (!live || live.lat == null || live.lon == null) return a;
+
+          const onGround = live.alt_baro === "ground" || live.gs < 30;
+          const altFt = typeof live.alt_baro === "number" ? Math.round(live.alt_baro) : a.altitude;
+          const speedKts = live.gs != null ? Math.round(live.gs) : a.speed;
+          const heading = live.track != null ? Math.round(live.track) : a.heading;
+
           return {
             ...a,
-            status: live.onGround ? a.status : "in_flight" as AircraftStatus,
+            status: onGround ? a.status : "in_flight" as AircraftStatus,
             lat: live.lat,
-            lng: live.lng,
-            altitude: live.altitude ?? a.altitude,
-            speed: live.speed ?? a.speed,
-            heading: live.heading,
+            lng: live.lon,
+            altitude: altFt,
+            speed: speedKts,
+            heading,
             squawk: live.squawk ?? a.squawk,
           };
-        }),
+        })
       );
+
       setLastSync(new Date());
-      if (states.length === 0) toast.info("No live ADS-B contacts right now.");
-      else toast.success(`Live update: ${states.length} aircraft tracked`);
+      if (contacts.length === 0) {
+        toast.info("No live ADS-B contacts right now — aircraft may be on ground.");
+      } else {
+        toast.success(`Live update: ${contacts.length} aircraft tracked`);
+      }
     } catch (err) {
-      toast.error("Could not reach OpenSky. Try again shortly.");
+      toast.error("Could not reach ADS-B data. Try again shortly.");
+      console.error(err);
     } finally {
       setSyncing(false);
     }
@@ -149,15 +144,22 @@ export default function Fleet() {
         <div>
           <h1 className="font-heading text-2xl font-bold">Fleet & Live Tracking</h1>
           <p className="text-sm text-muted-foreground">
-            {user?.email} · Real-time positions via OpenSky Network ADS-B
-            {lastSync && <span className="ml-2 text-xs">· last sync {lastSync.toLocaleTimeString()}</span>}
+            {user?.email} · Real-time ADS-B via adsb.fi
+            {lastSync && (
+              <span className="ml-2 text-xs">· last sync {lastSync.toLocaleTimeString()}</span>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" className="gap-2" onClick={signOut}>
             <LogOut className="h-4 w-4" /> Sign out
           </Button>
-          <Button variant="outline" className="gap-2" onClick={fetchLive} disabled={syncing || aircraft.length === 0}>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={fetchLive}
+            disabled={syncing || aircraft.length === 0}
+          >
             <RefreshCw className={cn("h-4 w-4", syncing && "animate-spin")} /> Sync
           </Button>
           <AddAircraftDialog onCreated={load} />
@@ -172,18 +174,26 @@ export default function Fleet() {
       </div>
 
       {loading ? (
-        <div className="rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">Loading fleet...</div>
+        <div className="rounded-xl border border-border bg-card p-12 text-center text-sm text-muted-foreground">
+          Loading fleet...
+        </div>
       ) : aircraft.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-12 text-center">
           <Plane className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <h3 className="font-heading text-lg font-semibold">No aircraft yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">Add your first aircraft to start tracking.</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add your first aircraft to start tracking.
+          </p>
           <AddAircraftDialog onCreated={load} />
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="lg:col-span-2 h-[520px]">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="lg:col-span-2 h-[520px]"
+            >
               <FleetMap aircraft={aircraft} selectedId={selectedId} onSelect={setSelectedId} />
             </motion.div>
 
@@ -230,7 +240,12 @@ export default function Fleet() {
           </div>
 
           {selected && (
-            <motion.div key={selected.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-border bg-card p-5">
+            <motion.div
+              key={selected.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border border-border bg-card p-5"
+            >
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
                   <div className="flex items-center gap-3">
@@ -239,7 +254,9 @@ export default function Fleet() {
                       {statusMeta[selected.status].label}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">{selected.year} {selected.model} · {selected.type}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selected.year} {selected.model} · {selected.type}
+                  </p>
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-muted-foreground">Hourly Rate</div>
@@ -280,4 +297,3 @@ function DetailItem({ icon: Icon, label, value }: { icon?: any; label: string; v
     </div>
   );
 }
-
