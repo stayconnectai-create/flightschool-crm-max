@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
  
-  const rapidApiKey = Deno.env.get("RAPIDAPI_KEY");
+  const rapidApiKey = Deno.env.get("RAPIDAPI_KEY DISABLING API");
   if (!rapidApiKey) {
     return new Response(JSON.stringify({ error: "RAPIDAPI_KEY secret not set" }), {
       status: 500,
