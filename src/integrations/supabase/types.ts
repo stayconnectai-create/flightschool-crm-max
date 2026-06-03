@@ -92,6 +92,182 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          lead_captured: boolean
+          message_count: number
+          source_url: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lead_captured?: boolean
+          message_count?: number
+          source_url?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lead_captured?: boolean
+          message_count?: number
+          source_url?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chatbot_leads: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          interest: string | null
+          name: string | null
+          notes: string | null
+          phone: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          interest?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          interest?: string | null
+          name?: string | null
+          notes?: string | null
+          phone?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          question: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          question: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          question?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      school_settings: {
+        Row: {
+          bot_greeting: string
+          created_at: string
+          info: string
+          primary_color: string
+          school_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_greeting?: string
+          created_at?: string
+          info?: string
+          primary_color?: string
+          school_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_greeting?: string
+          created_at?: string
+          info?: string
+          primary_color?: string
+          school_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
