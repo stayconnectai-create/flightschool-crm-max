@@ -13,6 +13,7 @@ import Contacts from "./pages/Contacts";
 import Sequences from "./pages/Sequences";
 import IntakeForms from "./pages/IntakeForms";
 import Fleet from "./pages/Fleet";
+import Chatbot from "./pages/Chatbot";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -43,6 +44,14 @@ const App = () => (
                       element={
                         <ProtectedRoute>
                           <Fleet />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/chatbot"
+                      element={
+                        <ProtectedRoute>
+                          <Chatbot />
                         </ProtectedRoute>
                       }
                     />
