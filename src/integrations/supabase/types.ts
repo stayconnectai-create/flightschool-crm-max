@@ -244,6 +244,8 @@ export type Database = {
           created_at: string
           info: string
           primary_color: string
+          proactive_delay: number
+          proactive_message: string
           school_name: string
           updated_at: string
           user_id: string
@@ -253,6 +255,8 @@ export type Database = {
           created_at?: string
           info?: string
           primary_color?: string
+          proactive_delay?: number
+          proactive_message?: string
           school_name?: string
           updated_at?: string
           user_id: string
@@ -262,6 +266,8 @@ export type Database = {
           created_at?: string
           info?: string
           primary_color?: string
+          proactive_delay?: number
+          proactive_message?: string
           school_name?: string
           updated_at?: string
           user_id?: string
