@@ -344,17 +344,23 @@ function EmbedTab({ userId, settings }: { userId: string; settings: Settings }) 
   const color = settings.primary_color.replace(/^#/, "");
   const title = encodeURIComponent(settings.school_name);
   const greeting = encodeURIComponent(settings.bot_greeting);
+  const proactive = settings.proactive_message ? encodeURIComponent(settings.proactive_message) : "";
+  const delay = settings.proactive_delay ?? 10;
 
   const scriptSnippet = `<script src="${origin}/skylead-widget.js"
   data-workspace="${userId}"
   data-title="${settings.school_name}"
   data-color="${color}"
-  data-greeting="${settings.bot_greeting}"></script>`;
+  data-greeting="${settings.bot_greeting}"` +
+    (proactive ? `\n  data-proactive="${settings.proactive_message}"` : "") +
+    `\n  data-proactive-delay="${delay}"></script>`;
 
   const iframeSnippet = `<iframe
-  src="${origin}/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}"
+  src="${origin}/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}${proactive ? "&p=" + proactive : ""}"
   style="width:380px;height:560px;border:0;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.15);"
   title="Chat"></iframe>`;
+
+  const previewSrc = `/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}${proactive ? "&p=" + proactive : ""}`;
 
   return (
     <div className="space-y-4">
@@ -383,7 +389,7 @@ function EmbedTab({ userId, settings }: { userId: string; settings: Settings }) 
         </CardHeader>
         <CardContent>
           <iframe
-            src={`/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}`}
+            src={previewSrc}
             className="w-full max-w-[380px] h-[560px] rounded-2xl border shadow-md"
             title="Preview"
           />
