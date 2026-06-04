@@ -173,6 +173,28 @@ function SetupTab({ settings, onSave, userId }: { settings: Settings; onSave: (s
           <label className="text-sm font-medium">Greeting message</label>
           <Input value={local.bot_greeting} onChange={(e) => setLocal({ ...local, bot_greeting: e.target.value })} />
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">Proactive message</label>
+            <Input
+              value={local.proactive_message}
+              onChange={(e) => setLocal({ ...local, proactive_message: e.target.value })}
+              placeholder="Have questions about our courses? Ask me anything!"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Shown as a notification bubble to engage visitors after a delay. Leave empty to disable.</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Proactive delay (seconds)</label>
+            <Input
+              type="number"
+              min={0}
+              max={300}
+              value={local.proactive_delay}
+              onChange={(e) => setLocal({ ...local, proactive_delay: parseInt(e.target.value || "10", 10) })}
+            />
+            <p className="text-xs text-muted-foreground mt-1">Seconds after page load before the proactive bubble appears.</p>
+          </div>
+        </div>
         <div>
           <label className="text-sm font-medium">About your school / business info</label>
           <Textarea
