@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Faq = { id: string; question: string; answer: string; sort_order: number };
-type Settings = { user_id: string; school_name: string; info: string; bot_greeting: string; primary_color: string };
+type Settings = { user_id: string; school_name: string; info: string; bot_greeting: string; primary_color: string; proactive_message: string; proactive_delay: number };
 type Lead = {
   id: string;
   name: string | null;
