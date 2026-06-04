@@ -59,6 +59,20 @@
       button:disabled { opacity: .5; cursor: not-allowed; }
       .footer { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0 8px; }
       .lead-toast { background: #dcfce7; color: #166534; padding: 8px 14px; border-radius: 10px; font-size: 13px; align-self: center; }
+      /* Proactive badge inside chat */
+      .proactive-badge {
+        align-self: center;
+        background: linear-gradient(135deg, var(--primary), var(--primary));
+        color: var(--primary-fg);
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        opacity: .9;
+        margin-bottom: 4px;
+      }
     </style>
   </head>
   <body>
@@ -74,11 +88,12 @@
       const params = new URLSearchParams(location.search);
       const WORKSPACE = params.get("w");
       const SUPABASE_URL = "https://dsxqhplhjyxsmiwxbmcd.supabase.co";
-      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzeHFocGxoanl4c21pd3hibWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTI2MjgsImV4cCI6MjA5NDMyODYyOH0.d4xWRBb_2lnNqQrvpwP3H9uR01qM9h6dvjmQj3Z9Lks";
+      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzeXFocGxoanl4c21pd3hibWNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NTI2MjgsImV4cCI6MjA5NDMyODYyOH0.d4xWRBb_2lnNqQrvpwP3H9uR01qM9h6dvjmQj3Z9Lks";
       const ENDPOINT = SUPABASE_URL + "/functions/v1/chatbot-chat";
 
       const greeting = decodeURIComponent(params.get("g") || "Hi! How can I help?");
       const title = decodeURIComponent(params.get("t") || "Chat");
+      const proactiveMsg = decodeURIComponent(params.get("p") || "");
       const color = "#" + (params.get("c") || "0EA5E9").replace(/^#/, "");
       document.documentElement.style.setProperty("--primary", color);
       document.getElementById("title").textContent = title;
@@ -107,13 +122,30 @@
         log.appendChild(d);
         log.scrollTop = log.scrollHeight;
       }
+      function addProactiveBadge() {
+        const d = document.createElement("div");
+        d.className = "proactive-badge";
+        d.textContent = "New message";
+        log.appendChild(d);
+        log.scrollTop = log.scrollHeight;
+      }
 
       // Replay history if exists
       if (state.history && state.history.length) {
         state.history.forEach(m => add(m.role, m.content));
       } else {
+        // Normal first visit: show greeting
         add("bot", greeting);
         state.history = [{ role: "bot", content: greeting }];
+        // If proactive message is present and this is a fresh session, inject it as a follow-up
+        if (proactiveMsg && proactiveMsg !== greeting) {
+          setTimeout(() => {
+            addProactiveBadge();
+            add("bot", proactiveMsg);
+            state.history.push({ role: "bot", content: proactiveMsg });
+            persist();
+          }, 800);
+        }
         persist();
       }
 

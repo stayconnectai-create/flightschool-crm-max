@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Faq = { id: string; question: string; answer: string; sort_order: number };
-type Settings = { user_id: string; school_name: string; info: string; bot_greeting: string; primary_color: string };
+type Settings = { user_id: string; school_name: string; info: string; bot_greeting: string; primary_color: string; proactive_message: string; proactive_delay: number };
 type Lead = {
   id: string;
   name: string | null;
@@ -173,6 +173,28 @@ function SetupTab({ settings, onSave, userId }: { settings: Settings; onSave: (s
           <label className="text-sm font-medium">Greeting message</label>
           <Input value={local.bot_greeting} onChange={(e) => setLocal({ ...local, bot_greeting: e.target.value })} />
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">Proactive message</label>
+            <Input
+              value={local.proactive_message}
+              onChange={(e) => setLocal({ ...local, proactive_message: e.target.value })}
+              placeholder="Have questions about our courses? Ask me anything!"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Shown as a notification bubble to engage visitors after a delay. Leave empty to disable.</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Proactive delay (seconds)</label>
+            <Input
+              type="number"
+              min={0}
+              max={300}
+              value={local.proactive_delay}
+              onChange={(e) => setLocal({ ...local, proactive_delay: parseInt(e.target.value || "10", 10) })}
+            />
+            <p className="text-xs text-muted-foreground mt-1">Seconds after page load before the proactive bubble appears.</p>
+          </div>
+        </div>
         <div>
           <label className="text-sm font-medium">About your school / business info</label>
           <Textarea
@@ -322,17 +344,23 @@ function EmbedTab({ userId, settings }: { userId: string; settings: Settings }) 
   const color = settings.primary_color.replace(/^#/, "");
   const title = encodeURIComponent(settings.school_name);
   const greeting = encodeURIComponent(settings.bot_greeting);
+  const proactive = settings.proactive_message ? encodeURIComponent(settings.proactive_message) : "";
+  const delay = settings.proactive_delay ?? 10;
 
   const scriptSnippet = `<script src="${origin}/skylead-widget.js"
   data-workspace="${userId}"
   data-title="${settings.school_name}"
   data-color="${color}"
-  data-greeting="${settings.bot_greeting}"></script>`;
+  data-greeting="${settings.bot_greeting}"` +
+    (proactive ? `\n  data-proactive="${settings.proactive_message}"` : "") +
+    `\n  data-proactive-delay="${delay}"></script>`;
 
   const iframeSnippet = `<iframe
-  src="${origin}/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}"
+  src="${origin}/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}${proactive ? "&p=" + proactive : ""}"
   style="width:380px;height:560px;border:0;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.15);"
   title="Chat"></iframe>`;
+
+  const previewSrc = `/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}${proactive ? "&p=" + proactive : ""}`;
 
   return (
     <div className="space-y-4">
@@ -361,7 +389,7 @@ function EmbedTab({ userId, settings }: { userId: string; settings: Settings }) 
         </CardHeader>
         <CardContent>
           <iframe
-            src={`/chatbot.html?w=${userId}&c=${color}&t=${title}&g=${greeting}`}
+            src={previewSrc}
             className="w-full max-w-[380px] h-[560px] rounded-2xl border shadow-md"
             title="Preview"
           />
