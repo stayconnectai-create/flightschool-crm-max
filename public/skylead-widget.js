@@ -2,6 +2,8 @@
    <script src="https://YOUR_APP/skylead-widget.js" data-workspace="USER_ID"
            data-color="0EA5E9" data-title="Acme Flight School"
            data-greeting="Hi! How can I help?"
+           data-status="Online — typically replies in a few minutes"
+           data-suggestions="Course pricing|Book a discovery flight|Requirements|Visit the school"
            data-proactive="Have questions about our courses? Ask me anything!"
            data-proactive-delay="8"></script>
 */
@@ -13,11 +15,14 @@
   var color = (s.getAttribute("data-color") || "0EA5E9").replace(/^#/, "");
   var title = encodeURIComponent(s.getAttribute("data-title") || "Chat");
   var greeting = encodeURIComponent(s.getAttribute("data-greeting") || "Hi! How can I help?");
+  var statusLbl = encodeURIComponent(s.getAttribute("data-status") || "Online — typically replies in a few minutes");
+  var suggestions = s.getAttribute("data-suggestions") || "";
   var proactive = s.getAttribute("data-proactive") || "";
   var proactiveDelay = parseInt(s.getAttribute("data-proactive-delay") || "10", 10) * 1000;
   var origin = s.src.split("/").slice(0, 3).join("/");
   var iframeSrc = origin + "/chatbot.html?w=" + encodeURIComponent(workspace) +
-    "&c=" + color + "&t=" + title + "&g=" + greeting +
+    "&c=" + color + "&t=" + title + "&g=" + greeting + "&s=" + statusLbl +
+    (suggestions ? "&q=" + encodeURIComponent(suggestions) : "") +
     (proactive ? "&p=" + encodeURIComponent(proactive) : "");
 
   /* ---- Chat button ---- */
@@ -45,15 +50,12 @@
   bubbleArrow.style.cssText = "position:absolute;right:18px;bottom:-6px;width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:2px 2px 4px rgba(0,0,0,.06);";
   bubble.appendChild(bubbleArrow);
 
-  /* ---- Pulse ring for attention ---- */
   var pulse = document.createElement("div");
   pulse.style.cssText = "position:fixed;right:14px;bottom:14px;width:72px;height:72px;border-radius:50%;border:0;background:" + hexToRgba(color, 0.35) + ";z-index:2147483644;opacity:0;pointer-events:none;";
-  var pulseKeyframes = "@keyframes sl-pulse{0%{transform:scale(1);opacity:.6}70%{transform:scale(1.5);opacity:0}100%{transform:scale(1.5);opacity:0}}";
   var styleSheet = document.createElement("style");
-  styleSheet.textContent = pulseKeyframes;
+  styleSheet.textContent = "@keyframes sl-pulse{0%{transform:scale(1);opacity:.6}70%{transform:scale(1.5);opacity:0}100%{transform:scale(1.5);opacity:0}}";
   document.head.appendChild(styleSheet);
 
-  /* ---- Open / close logic ---- */
   var opened = false;
   function openChat() {
     opened = true;
@@ -61,60 +63,43 @@
     panel.style.display = "block";
     hideProactive();
   }
-  function closeChat() {
-    opened = false;
-    panel.style.display = "none";
-  }
-  function toggleChat() {
-    if (opened) closeChat(); else openChat();
-  }
+  function closeChat() { opened = false; panel.style.display = "none"; }
+  function toggleChat() { if (opened) closeChat(); else openChat(); }
 
   btn.addEventListener("click", toggleChat);
   bubble.addEventListener("click", openChat);
 
-  /* ---- Proactive flow ---- */
   var proactiveShown = false;
-  var proactiveTimer = null;
-
   function showProactive() {
     if (proactiveShown || opened || !proactive) return;
     proactiveShown = true;
     bubble.style.opacity = "1";
     bubble.style.transform = "translateY(0) scale(1)";
     bubble.style.pointerEvents = "auto";
-    // pulse ring animation
     pulse.style.animation = "sl-pulse 2s ease-out infinite";
     pulse.style.opacity = "1";
   }
-
   function hideProactive() {
     bubble.style.opacity = "0";
     bubble.style.transform = "translateY(10px) scale(.95)";
     bubble.style.pointerEvents = "none";
     pulse.style.animation = "none";
     pulse.style.opacity = "0";
-    proactiveShown = true; // prevent re-showing
+    proactiveShown = true;
   }
+  if (proactive && proactiveDelay >= 0) setTimeout(showProactive, proactiveDelay);
 
-  // Start proactive timer
-  if (proactive && proactiveDelay >= 0) {
-    proactiveTimer = setTimeout(showProactive, proactiveDelay);
-  }
-
-  // Also hide bubble if user clicks anywhere outside
   document.addEventListener("click", function (e) {
     if (!opened && proactiveShown && e.target !== btn && e.target !== bubble && !bubble.contains(e.target)) {
       hideProactive();
     }
   });
 
-  /* ---- Append to body ---- */
   document.body.appendChild(panel);
   document.body.appendChild(bubble);
   document.body.appendChild(btn);
   document.body.appendChild(pulse);
 
-  /* ---- Utility ---- */
   function hexToRgba(hex, alpha) {
     var r = parseInt(hex.slice(0, 2), 16);
     var g = parseInt(hex.slice(2, 4), 16);
