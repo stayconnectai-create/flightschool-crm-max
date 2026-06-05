@@ -12,8 +12,6 @@
         --fg: #0f172a;
         --muted: #64748b;
         --border: #e2e8f0;
-        --bubble-user-bg: var(--primary);
-        --bubble-user-fg: var(--primary-fg);
       }
       * { box-sizing: border-box; }
       html, body { height: 100%; margin: 0; }
@@ -26,58 +24,95 @@
         height: 100vh;
       }
       header {
-        padding: 14px 16px;
+        padding: 12px 16px;
         background: var(--primary);
         color: var(--primary-fg);
-        font-weight: 600;
         display: flex;
         align-items: center;
         gap: 10px;
         flex-shrink: 0;
       }
-      header .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 2px rgba(255,255,255,.3); }
+      header .avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: rgba(255,255,255,.18);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 15px;
+      }
+      header .meta { display: flex; flex-direction: column; line-height: 1.2; }
+      header .meta .title { font-weight: 600; font-size: 14px; }
+      header .meta .status { font-size: 11px; opacity: .85; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+      header .meta .status .dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+      header .handoff-btn {
+        margin-left: auto;
+        background: rgba(255,255,255,.18);
+        color: var(--primary-fg);
+        border: 0;
+        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background .15s;
+      }
+      header .handoff-btn:hover { background: rgba(255,255,255,.28); }
+
       #log {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        flex: 1; overflow-y: auto; padding: 16px;
+        display: flex; flex-direction: column; gap: 10px;
       }
       .msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; line-height: 1.45; font-size: 14px; white-space: pre-wrap; word-wrap: break-word; }
       .msg.bot { background: #f1f5f9; color: var(--fg); align-self: flex-start; border-bottom-left-radius: 4px; }
-      .msg.user { background: var(--bubble-user-bg); color: var(--bubble-user-fg); align-self: flex-end; border-bottom-right-radius: 4px; }
+      .msg.user { background: var(--primary); color: var(--primary-fg); align-self: flex-end; border-bottom-right-radius: 4px; }
       .typing { display: inline-flex; gap: 4px; padding: 12px 14px; background: #f1f5f9; border-radius: 14px; align-self: flex-start; }
       .typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: b 1.2s infinite; }
       .typing span:nth-child(2) { animation-delay: .15s }
       .typing span:nth-child(3) { animation-delay: .3s }
       @keyframes b { 0%,80%,100% { opacity:.3; transform: translateY(0) } 40% { opacity:1; transform: translateY(-3px) } }
+
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px; }
+      .chip {
+        background: #fff; border: 1.5px solid var(--primary);
+        color: var(--primary); font-size: 12.5px; font-weight: 500;
+        padding: 7px 12px; border-radius: 999px; cursor: pointer;
+        transition: background .15s, color .15s;
+      }
+      .chip:hover { background: var(--primary); color: var(--primary-fg); }
+
       form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; background: var(--bg); }
       input { flex: 1; padding: 11px 14px; border: 1px solid var(--border); border-radius: 999px; outline: none; font-size: 14px; font-family: inherit; }
       input:focus { border-color: var(--primary); }
       button { padding: 0 16px; border: 0; background: var(--primary); color: var(--primary-fg); border-radius: 999px; font-weight: 600; cursor: pointer; font-size: 14px; }
       button:disabled { opacity: .5; cursor: not-allowed; }
       .footer { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0 8px; }
-      .lead-toast { background: #dcfce7; color: #166534; padding: 8px 14px; border-radius: 10px; font-size: 13px; align-self: center; }
-      /* Proactive badge inside chat */
+      .lead-toast {
+        background: #dcfce7; color: #166534; padding: 10px 14px;
+        border-radius: 10px; font-size: 13px; align-self: center;
+        max-width: 90%; text-align: center; font-weight: 500;
+      }
+      .booking-toast { background: #fef3c7; color: #92400e; }
+      .handoff-toast { background: #dbeafe; color: #1e40af; }
       .proactive-badge {
         align-self: center;
-        background: linear-gradient(135deg, var(--primary), var(--primary));
-        color: var(--primary-fg);
-        padding: 6px 14px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        opacity: .9;
-        margin-bottom: 4px;
+        background: var(--primary); color: var(--primary-fg);
+        padding: 6px 14px; border-radius: 999px;
+        font-size: 11px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .04em;
+        opacity: .9; margin-bottom: 4px;
       }
     </style>
   </head>
   <body>
-    <header><span class="dot"></span><span id="title">Chat</span></header>
+    <header>
+      <div class="avatar" id="avatar">?</div>
+      <div class="meta">
+        <span class="title" id="title">Chat</span>
+        <span class="status"><span class="dot"></span><span id="status-label">Online</span></span>
+      </div>
+      <button class="handoff-btn" id="handoff-btn" title="Talk to a person">👤 Talk to human</button>
+    </header>
+
     <div id="log"></div>
+
     <form id="form">
       <input id="input" placeholder="Type your message..." autocomplete="off" required />
       <button type="submit" id="send">Send</button>
@@ -94,50 +129,78 @@
       const greeting = decodeURIComponent(params.get("g") || "Hi! How can I help?");
       const title = decodeURIComponent(params.get("t") || "Chat");
       const proactiveMsg = decodeURIComponent(params.get("p") || "");
+      const statusLabel = decodeURIComponent(params.get("s") || "Online — typically replies in a few minutes");
+      const suggestions = (params.get("q") ? decodeURIComponent(params.get("q")).split("|") : []).filter(Boolean).slice(0, 4);
       const color = "#" + (params.get("c") || "0EA5E9").replace(/^#/, "");
+
       document.documentElement.style.setProperty("--primary", color);
       document.getElementById("title").textContent = title;
+      document.getElementById("status-label").textContent = statusLabel;
+      document.getElementById("avatar").textContent = (title || "?").trim().charAt(0).toUpperCase();
 
       const log = document.getElementById("log");
       const form = document.getElementById("form");
       const input = document.getElementById("input");
       const send = document.getElementById("send");
+      const handoffBtn = document.getElementById("handoff-btn");
 
       const STORAGE = "sl_chat_" + WORKSPACE;
       let state = JSON.parse(localStorage.getItem(STORAGE) || "{}");
       if (!state.visitor_id) state.visitor_id = crypto.randomUUID();
 
       function persist() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
+      function scroll() { log.scrollTop = log.scrollHeight; }
+
       function add(role, text) {
         const d = document.createElement("div");
         d.className = "msg " + (role === "user" ? "user" : "bot");
         d.textContent = text;
         log.appendChild(d);
-        log.scrollTop = log.scrollHeight;
+        scroll();
       }
-      function addToast(text) {
+      function addToast(text, kind) {
         const d = document.createElement("div");
-        d.className = "lead-toast";
-        d.textContent = "✓ " + text;
+        d.className = "lead-toast" + (kind ? " " + kind + "-toast" : "");
+        d.textContent = (kind === "booking" ? "📅 " : kind === "handoff" ? "👤 " : "✓ ") + text;
         log.appendChild(d);
-        log.scrollTop = log.scrollHeight;
+        scroll();
       }
       function addProactiveBadge() {
         const d = document.createElement("div");
         d.className = "proactive-badge";
         d.textContent = "New message";
         log.appendChild(d);
-        log.scrollTop = log.scrollHeight;
+        scroll();
+      }
+      function renderChips() {
+        if (!suggestions.length || state.chips_used) return;
+        const wrap = document.createElement("div");
+        wrap.className = "chips";
+        suggestions.forEach((s) => {
+          const c = document.createElement("button");
+          c.type = "button";
+          c.className = "chip";
+          c.textContent = s;
+          c.onclick = () => {
+            state.chips_used = true;
+            persist();
+            wrap.remove();
+            input.value = s;
+            form.requestSubmit();
+          };
+          wrap.appendChild(c);
+        });
+        log.appendChild(wrap);
+        scroll();
       }
 
-      // Replay history if exists
+      // Replay or start fresh
       if (state.history && state.history.length) {
-        state.history.forEach(m => add(m.role, m.content));
+        state.history.forEach((m) => add(m.role, m.content));
       } else {
-        // Normal first visit: show greeting
         add("bot", greeting);
         state.history = [{ role: "bot", content: greeting }];
-        // If proactive message is present and this is a fresh session, inject it as a follow-up
+        renderChips();
         if (proactiveMsg && proactiveMsg !== greeting) {
           setTimeout(() => {
             addProactiveBadge();
@@ -155,19 +218,13 @@
         typingEl.className = "typing";
         typingEl.innerHTML = "<span></span><span></span><span></span>";
         log.appendChild(typingEl);
-        log.scrollTop = log.scrollHeight;
+        scroll();
       }
       function hideTyping() { if (typingEl) { typingEl.remove(); typingEl = null; } }
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const text = input.value.trim();
-        if (!text || !WORKSPACE) return;
-        input.value = "";
-        add("user", text);
-        state.history.push({ role: "user", content: text });
-        persist();
+      async function sendToServer(text, extra) {
         send.disabled = true;
+        handoffBtn.disabled = true;
         showTyping();
         try {
           const res = await fetch(ENDPOINT, {
@@ -180,6 +237,7 @@
               message: text,
               source_url: document.referrer || location.href,
               user_agent: navigator.userAgent,
+              ...(extra || {}),
             }),
           });
           const data = await res.json();
@@ -191,15 +249,45 @@
           state.conversation_id = data.conversation_id;
           add("bot", data.reply);
           state.history.push({ role: "bot", content: data.reply });
-          if (data.lead_captured) addToast("Thanks — we've got your info!");
+          if (data.booking_created) addToast("Booking request sent! The team will confirm shortly.", "booking");
+          else if (data.handoff) addToast("Flagged for a team member to follow up.", "handoff");
+          else if (data.lead_captured) addToast("Thanks — we've got your info!");
           persist();
         } catch (err) {
           hideTyping();
           add("bot", "Network error. Please try again.");
         } finally {
           send.disabled = false;
+          handoffBtn.disabled = false;
           input.focus();
         }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text || !WORKSPACE) return;
+        input.value = "";
+        // Remove chips if still present
+        const chipEl = log.querySelector(".chips");
+        if (chipEl) { chipEl.remove(); state.chips_used = true; persist(); }
+        add("user", text);
+        state.history.push({ role: "user", content: text });
+        persist();
+        await sendToServer(text);
+      });
+
+      handoffBtn.addEventListener("click", async () => {
+        if (state.handoff_requested) {
+          addToast("Already flagged — the team will be in touch.", "handoff");
+          return;
+        }
+        state.handoff_requested = true;
+        persist();
+        const text = "I'd like to talk to a person, please.";
+        add("user", text);
+        state.history.push({ role: "user", content: text });
+        await sendToServer(text, { request_handoff: true });
       });
 
       input.focus();
