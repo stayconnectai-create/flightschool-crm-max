@@ -95,9 +95,11 @@ export type Database = {
       chat_conversations: {
         Row: {
           created_at: string
+          handoff_at: string | null
           id: string
           lead_captured: boolean
           message_count: number
+          needs_human: boolean
           source_url: string | null
           updated_at: string
           user_agent: string | null
@@ -106,9 +108,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          handoff_at?: string | null
           id?: string
           lead_captured?: boolean
           message_count?: number
+          needs_human?: boolean
           source_url?: string | null
           updated_at?: string
           user_agent?: string | null
@@ -117,9 +121,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          handoff_at?: string | null
           id?: string
           lead_captured?: boolean
           message_count?: number
+          needs_human?: boolean
           source_url?: string | null
           updated_at?: string
           user_agent?: string | null
@@ -170,9 +176,12 @@ export type Database = {
           email: string | null
           id: string
           interest: string | null
+          lead_type: string
           name: string | null
           notes: string | null
           phone: string | null
+          preferred_date: string | null
+          program: string | null
           source_url: string | null
           status: string
           updated_at: string
@@ -184,9 +193,12 @@ export type Database = {
           email?: string | null
           id?: string
           interest?: string | null
+          lead_type?: string
           name?: string | null
           notes?: string | null
           phone?: string | null
+          preferred_date?: string | null
+          program?: string | null
           source_url?: string | null
           status?: string
           updated_at?: string
@@ -198,9 +210,12 @@ export type Database = {
           email?: string | null
           id?: string
           interest?: string | null
+          lead_type?: string
           name?: string | null
           notes?: string | null
           phone?: string | null
+          preferred_date?: string | null
+          program?: string | null
           source_url?: string | null
           status?: string
           updated_at?: string
@@ -240,35 +255,47 @@ export type Database = {
       }
       school_settings: {
         Row: {
+          booking_enabled: boolean
           bot_greeting: string
           created_at: string
           info: string
           primary_color: string
           proactive_delay: number
           proactive_message: string
+          programs: string
           school_name: string
+          status_label: string
+          suggested_questions: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
+          booking_enabled?: boolean
           bot_greeting?: string
           created_at?: string
           info?: string
           primary_color?: string
           proactive_delay?: number
           proactive_message?: string
+          programs?: string
           school_name?: string
+          status_label?: string
+          suggested_questions?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
+          booking_enabled?: boolean
           bot_greeting?: string
           created_at?: string
           info?: string
           primary_color?: string
           proactive_delay?: number
           proactive_message?: string
+          programs?: string
           school_name?: string
+          status_label?: string
+          suggested_questions?: string[]
           updated_at?: string
           user_id?: string
         }
