@@ -1,10 +1,18 @@
-// Live aircraft tracking via adsb.fi (free, no API key)
-// Docs: https://github.com/adsblol/api  (adsb.fi mirrors the same API)
+// Live aircraft tracking via AeroDataBox (RapidAPI)
+// Docs: https://rapidapi.com/aedbx-aedbx/api/aerodatabox
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  const rapidApiKey = Deno.env.get("RAPIDAPI_KEY") ?? Deno.env.get("RapidAPIKey");
+  if (!rapidApiKey) {
+    return new Response(JSON.stringify({ error: "RAPIDAPI_KEY secret not set" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -19,32 +27,44 @@ Deno.serve(async (req) => {
     const results = await Promise.allSettled(
       icao24.map(async (code: string) => {
         const hex = String(code).toLowerCase().trim();
-        // adsb.fi public API — find aircraft by ICAO24 hex
-        const url = `https://opendata.adsb.fi/api/v2/hex/${hex}`;
+        const url = `https://aerodatabox.p.rapidapi.com/flights/icao24/${hex}?withAircraftImage=false&withLocation=true`;
         const resp = await fetch(url, {
-          headers: { "User-Agent": "skylead-fleet-tracker/1.0" },
+          headers: {
+            "X-RapidAPI-Key": rapidApiKey,
+            "X-RapidAPI-Host": "aerodatabox.p.rapidapi.com",
+          },
         });
+
+        if (resp.status === 404) return null;
         if (!resp.ok) {
-          console.error(`adsb.fi ${resp.status} for ${hex}`);
+          console.error(`AeroDataBox ${resp.status} for ${hex}: ${await resp.text()}`);
           return null;
         }
-        const data = await resp.json();
-        const ac = Array.isArray(data?.ac) && data.ac.length ? data.ac[0] : null;
-        if (!ac || typeof ac.lat !== "number" || typeof ac.lon !== "number") {
-          return null;
-        }
+
+        const flights = await resp.json();
+        const active = Array.isArray(flights)
+          ? flights.find((f: any) =>
+              ["EnRoute", "Approaching", "Departing", "OnGround"].includes(f.status)
+            ) ?? flights[0]
+          : null;
+
+        if (!active) return null;
+        const loc = active.location ?? {};
+        if (typeof loc.lat !== "number" || typeof loc.lon !== "number") return null;
+
         return {
           icao24: hex,
-          callsign: (ac.flight ?? "").trim() || null,
-          lat: ac.lat,
-          lng: ac.lon,
-          altitude: typeof ac.alt_baro === "number" ? ac.alt_baro : (ac.alt_geom ?? null),
-          onGround: ac.alt_baro === "ground",
-          speed: ac.gs ?? null,
-          heading: ac.track ?? ac.true_heading ?? 0,
-          squawk: ac.squawk ?? null,
-          origin: null,
-          destination: null,
+          callsign: active.callSign ?? active.number ?? null,
+          lat: loc.lat,
+          lng: loc.lon,
+          altitude: loc.pressureAltFt ?? loc.geometricAltFt ?? null,
+          onGround: active.status === "OnGround",
+          speed: loc.groundSpeedKt ?? null,
+          heading: loc.heading ?? 0,
+          squawk: loc.squawk ?? null,
+          origin: active.departure?.airport?.icao ?? null,
+          destination: active.arrival?.airport?.icao ?? null,
+          status: active.status ?? null,
         };
       })
     );
